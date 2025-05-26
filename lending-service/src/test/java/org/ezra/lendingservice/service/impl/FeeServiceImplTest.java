@@ -41,21 +41,21 @@ class FeeServiceImplTest {
         fixedServiceFeeConfig = FeeConfiguration.builder()
                 .feeType(FeeType.SERVICE_FEE)
                 .calculationType(FeeCalculationType.FIXED)
-                .value(BigDecimal.valueOf(50))
+                .feeAmount(BigDecimal.valueOf(50))
                 .applicationTime(FeeApplicationTime.ORIGINATION)
                 .build();
 
         percentageLateFeeConfig = FeeConfiguration.builder()
                 .feeType(FeeType.LATE_FEE)
                 .calculationType(FeeCalculationType.PERCENTAGE)
-                .value(BigDecimal.valueOf(5)) // 5%
+                .feeAmount(BigDecimal.valueOf(5))
                 .daysAfterDueForLateFee(3)
                 .build();
 
         dailyFeeConfig = FeeConfiguration.builder()
                 .feeType(FeeType.DAILY_FEE)
                 .calculationType(FeeCalculationType.FIXED)
-                .value(BigDecimal.valueOf(0.50)) // 0.50 per day
+                .feeAmount(BigDecimal.valueOf(0.50))
                 .build();
 
         loanProduct = LoanProduct.builder()
@@ -91,7 +91,7 @@ class FeeServiceImplTest {
 
     @Test
     void calculateFeeAmount_percentage() {
-        BigDecimal fee = feeService.calculateFeeAmount(BigDecimal.valueOf(200), percentageLateFeeConfig); // 5% of 200
+        BigDecimal fee = feeService.calculateFeeAmount(BigDecimal.valueOf(200), percentageLateFeeConfig);
         assertEquals(0, BigDecimal.valueOf(10.00).compareTo(fee));
     }
 
@@ -131,7 +131,7 @@ class FeeServiceImplTest {
     void applyLateFeeIfNeeded_forInstallment_doesNotApplyIfNotPastGrace() {
         Installment installment = Installment.builder()
                 .id(1L).loan(loan)
-                .dueDate(LocalDate.now().minusDays(2)) // 2 days overdue, grace is 3
+                .dueDate(LocalDate.now().minusDays(2))
                 .status(InstallmentStatus.OVERDUE)
                 .totalAmountDue(BigDecimal.valueOf(200))
                 .build();
