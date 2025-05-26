@@ -72,6 +72,7 @@ public class FeeServiceImpl implements FeeService {
     private Optional<AppliedFee> applyLateFeeInternal(Loan loan, BigDecimal overdueAmount, String reasonSuffix, FeeConfiguration feeConfig) {
         BigDecimal lateFeeAmount = calculateFeeAmount(overdueAmount, feeConfig);
         if (lateFeeAmount.compareTo(BigDecimal.ZERO) > 0) {
+            Long currentId = appliedFeeRepository.findMaxId();
             AppliedFee lateFee = AppliedFee.builder()
                     .loan(loan)
                     .feeType(FeeType.LATE_FEE)
@@ -79,6 +80,7 @@ public class FeeServiceImpl implements FeeService {
                     .dateApplied(LocalDate.now())
                     .reason("Late Fee - " + reasonSuffix)
                     .paid(false)
+                    .id(currentId + 1)
                     .build();
             appliedFeeRepository.save(lateFee);
             loan.setOutstandingAmount(loan.getOutstandingAmount().add(lateFeeAmount));
@@ -165,6 +167,7 @@ public class FeeServiceImpl implements FeeService {
                     if (!alreadyAppliedToday) {
                         BigDecimal dailyFeeAmount = calculateFeeAmount(loan.getOutstandingAmount(), feeConfig);
                         if (dailyFeeAmount.compareTo(BigDecimal.ZERO) > 0) {
+                            Long currentId = appliedFeeRepository.findMaxId();
                             AppliedFee dailyFee = AppliedFee.builder()
                                     .loan(loan)
                                     .feeType(FeeType.DAILY_FEE)
@@ -172,6 +175,7 @@ public class FeeServiceImpl implements FeeService {
                                     .dateApplied(today)
                                     .reason("Daily Accrued Fee")
                                     .paid(false)
+                                    .id(currentId + 1)
                                     .build();
                             appliedFeeRepository.save(dailyFee);
                             loan.setOutstandingAmount(loan.getOutstandingAmount().add(dailyFeeAmount));
