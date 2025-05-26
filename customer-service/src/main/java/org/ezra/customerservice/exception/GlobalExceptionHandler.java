@@ -5,7 +5,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import java.util.HashMap;
@@ -15,10 +14,10 @@ import java.util.stream.Collectors;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
     @Getter
-    static class ErrorResponse {
-        private int status;
-        private String message;
-        private long timestamp;
+    public static class ErrorResponse {
+        private final int status;
+        private final String message;
+        private final long timestamp;
 
         public ErrorResponse(int status, String message) {
             this.status = status;
