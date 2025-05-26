@@ -71,4 +71,26 @@ Follow these steps to set up and run the entire lending application:
                      Swagger documentation at http://localhost:8002/swagger-ui/index.html
 
 6. For docker deployment for the service: `docker-compose up -d`
+
+
+   **Architectural Overview**
+
+   Microservices: The application is divided into independent services, each responsible for a specific domain.
+   Service Discovery: Eureka Server (discovery-service) is used for dynamic registration and discovery of services.
+   Inter-Service Communication:
+            Synchronous (OpenFeign): lending-service calls customer-service for eligibility checks.
+            Asynchronous (Apache Kafka): lending-service produces notification events to a Kafka topic (e.g., notification-events). notification-service consumes these events to process and simulate notifications.
+   Database: Each service has its own dedicated H2 in-memory database, managed by Flyway.
+   API Layer: RESTful APIs are exposed by customer-service and lending-service.
+   Event-Driven Notifications: Notifications are triggered by business events published to Kafka.
+
+**Further Considerations & Potential Enhancements**
+
+1. Configuration Management: Use Spring Cloud Config Server for centralized configuration.
+2. API Gateway: Implement an API Gateway (e.g., Spring Cloud Gateway) as a single entry point for external clients.
+3. Security: Secure microservices using Spring Security and OAuth2/JWT.
+4. Resilience: Enhance fault tolerance with more advanced circuit breaker patterns (e.g., Resilience4j) and retry mechanisms.
+5. Distributed Tracing & Logging: Implement centralized logging (ELK stack) and distributed tracing (Zipkin, Jaeger) for better observability.
+6. Persistent Database: Replace H2 with a persistent database like PostgreSQL or MySQL for production-like environments.
+7. Real Notification Sending: Integrate with actual email (AWS SES, SendGrid) and SMS (Twilio) providers.
   
