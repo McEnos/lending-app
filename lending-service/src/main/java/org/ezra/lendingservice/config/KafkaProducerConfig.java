@@ -1,6 +1,7 @@
 package org.ezra.lendingservice.config;
 
 import com.fasterxml.jackson.databind.ser.std.StringSerializer;
+import org.apache.kafka.clients.admin.NewTopic;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -30,5 +31,10 @@ public class KafkaProducerConfig {
     @Bean
     public KafkaTemplate<String, String> kafkaTemplate() {
         return new KafkaTemplate<>(producerFactory());
+    }
+
+    @Bean
+    public NewTopic createTopic() {
+        return new NewTopic("notification-events", 3, (short) 1);
     }
 }
