@@ -57,7 +57,7 @@ Follow these steps to set up and run the entire lending application:
     running in Kraft mode i.e. without Zookeeper dependency
 4. Run: `./mvnw clean install` to install the project dependencies
 5. Start individual services:
-   discovery service: `./mvnw spring-boot:run -pl discovery-service` once started, you can access the Eureka dashboard at: http://localhost:8761
+   discovery service: `./mvnw spring-boot:run -pl service-discovery` once started, you can access the Eureka dashboard at: http://localhost:8761
    notification service: `./mvnw spring-boot:run -pl notification-service` 
                        once started, Check the Eureka dashboard; notification-service should appear as registered.
                        Access h2 console at http://localhost:8003/h2-console
