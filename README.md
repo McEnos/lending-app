@@ -51,7 +51,7 @@ Follow these steps to set up and run the entire lending application:
 ### 1. Project setup
 
 1. Clone the repo
-2. cd to the project folder
+2. cd to the project folder `lending-app`
 3. Start kafka cluster:
     using docker compose file, start a simple kafka cluster by running `docker-compose up kafka-ui -d` this will start a 2 node kafka cluster
     running in Kraft mode i.e. without Zookeeper dependency
@@ -88,7 +88,7 @@ Follow these steps to set up and run the entire lending application:
 
 1. Configuration Management: Use Spring Cloud Config Server for centralized configuration.
 2. API Gateway: Implement an API Gateway (e.g., Spring Cloud Gateway) as a single entry point for external clients.
-3. Security: Secure microservices using Spring Security and OAuth2/JWT.
+3. Security: Secure microservices using Spring Security and OAuth2/JWT or using Identity and access management tools like Keycloak.
 4. Resilience: Enhance fault tolerance with more advanced circuit breaker patterns (e.g., Resilience4j) and retry mechanisms.
 5. Distributed Tracing & Logging: Implement centralized logging (ELK stack) and distributed tracing (Zipkin, Jaeger) for better observability.
 6. Persistent Database: Replace H2 with a persistent database like PostgreSQL or MySQL for production-like environments.
