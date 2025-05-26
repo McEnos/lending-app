@@ -29,7 +29,7 @@ public class NotificationProcessingServiceImpl implements NotificationProcessing
     private final NotificationLogRepository logRepository;
     private final List<NotificationSender> notificationSenders;
 
-    private static final Pattern PLACEHOLDER_PATTERN = Pattern.compile("\\{(.+?)\\}");
+    private static final Pattern PLACEHOLDER_PATTERN = Pattern.compile("\\{(.+?)}");
 
     @Override
     @Transactional
@@ -49,7 +49,7 @@ public class NotificationProcessingServiceImpl implements NotificationProcessing
             log.warn("No template found for templateCode/eventType: '{}'. Logging raw event. EventId: {}",
                     eventDto.getEventType(), eventDto.getEventId());
             logBuilder.body("No template found. Raw payload: " + (eventDto.getPayload() != null ? eventDto.getPayload().toString() : "null"))
-                    .channel(NotificationChannel.CONSOLE)
+                    .channel(NotificationChannel.PUSH)
                     .status(NotificationStatus.FAILED)
                     .failureReason("Template not found: " + eventDto.getEventType());
             logRepository.save(logBuilder.build());
@@ -132,8 +132,7 @@ public class NotificationProcessingServiceImpl implements NotificationProcessing
         return switch (channel) {
             case EMAIL -> payload.getOrDefault("customerEmail", "customer_" + customerId + "@simulated-email.com");
             case SMS -> payload.getOrDefault("customerPhoneNumber", "+10000000000");
-            case PUSH -> payload.getOrDefault("customerPushToken", "simulated-push-token-" + customerId);
-            case CONSOLE -> "ConsoleLogForCustomer_" + customerId;
+            case PUSH -> "ConsoleLogForCustomer_" + customerId;
             default -> null;
         };
     }

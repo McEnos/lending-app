@@ -16,7 +16,7 @@ public class SmsNotificationSender implements NotificationSender {
     }
     @Override
     public void send(String recipientAddress, String subject, String body, Map<String, String> contextData) throws Exception {
-        log.info("--- SIMULATING SMS SEND ---");
+        log.info("--- SIMULATING SMS NOTIFICATION ---");
         log.info("To: {}", recipientAddress);
         log.info("Message: {}", body);
         log.info("--- SMS SIMULATION COMPLETE ---");

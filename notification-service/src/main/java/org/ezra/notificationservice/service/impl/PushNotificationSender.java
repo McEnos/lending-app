@@ -9,18 +9,17 @@ import java.util.Map;
 
 @Service
 @Slf4j
-public class EmailNotificationSender implements NotificationSender {
+public class PushNotificationSender implements NotificationSender {
     @Override
     public boolean supports(NotificationChannel channel) {
-        return NotificationChannel.EMAIL.equals(channel);
+        return NotificationChannel.PUSH.equals(channel);
     }
 
     @Override
     public void send(String recipientAddress, String subject, String body, Map<String, String> contextData) throws Exception {
-        log.info("--- SIMULATING EMAIL NOTIFICATION ---");
+        log.info("--- SIMULATING PUSH NOTIFICATION ---");
         log.info("To: {}", recipientAddress);
-        log.info("Subject: {}", subject);
-        log.info("Body:\n{}", body);
-        log.info("--- EMAIL SIMULATION COMPLETE ---");
+        log.info("Message: {}", body);
+        log.info("--- PUSH SIMULATION COMPLETE ---");
     }
 }
