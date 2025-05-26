@@ -18,7 +18,7 @@ import java.time.LocalDate;
 @Builder
 public class AppliedFee {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    //@GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)

@@ -50,6 +50,7 @@ public class FeeServiceImpl implements FeeService {
                             feeConfig.getApplicationTime() == FeeApplicationTime.POST_DISBURSEMENT)) {
 
                 BigDecimal feeAmount = calculateFeeAmount(loan.getPrincipalAmount(), feeConfig);
+                Long currentId = appliedFeeRepository.findMaxId();
                 AppliedFee appliedFee = AppliedFee.builder()
                         .loan(loan)
                         .feeType(feeConfig.getFeeType())
@@ -57,6 +58,7 @@ public class FeeServiceImpl implements FeeService {
                         .dateApplied(LocalDate.now())
                         .reason("Origination Service Fee")
                         .paid(false)
+                        .id(currentId + 1)
                         .build();
                 appliedFees.add(appliedFeeRepository.save(appliedFee));
                 totalOriginationFees = totalOriginationFees.add(feeAmount);
@@ -101,9 +103,9 @@ public class FeeServiceImpl implements FeeService {
                             .anyMatch(af -> af.getFeeType() == FeeType.LATE_FEE &&
                                     af.getReason() != null &&
                                     af.getReason().contains("Installment #" + installment.getInstallmentNumber()) &&
-                                    af.getDateApplied().isAfter(installment.getDueDate().plusDays(feeConfig.getDaysAfterDueForLateFee() -1 )) // Simple check
+                                    af.getDateApplied().isAfter(installment.getDueDate().plusDays(feeConfig.getDaysAfterDueForLateFee() - 1)) // Simple check
                             );
-                    if(!alreadyApplied) {
+                    if (!alreadyApplied) {
                         BigDecimal overdueAmount = installment.getTotalAmountDue().subtract(installment.getAmountPaid());
                         return applyLateFeeInternal(loan, overdueAmount, "Installment #" + installment.getInstallmentNumber(), feeConfig);
                     } else {
@@ -131,9 +133,9 @@ public class FeeServiceImpl implements FeeService {
                             .anyMatch(af -> af.getFeeType() == FeeType.LATE_FEE &&
                                     af.getReason() != null &&
                                     af.getReason().contains("Lump Sum") && // Be more specific if needed
-                                    af.getDateApplied().isAfter(loan.getFinalDueDate().plusDays(feeConfig.getDaysAfterDueForLateFee() -1 ))
+                                    af.getDateApplied().isAfter(loan.getFinalDueDate().plusDays(feeConfig.getDaysAfterDueForLateFee() - 1))
                             );
-                    if(!alreadyApplied) {
+                    if (!alreadyApplied) {
                         BigDecimal overdueAmount = loan.getOutstandingAmount(); // Or principal + interest due if calculated differently
                         return applyLateFeeInternal(loan, overdueAmount, "Lump Sum", feeConfig);
                     } else {
