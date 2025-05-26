@@ -10,10 +10,12 @@ import org.ezra.notificationservice.event.NotificationEventDto;
 import org.ezra.notificationservice.repository.NotificationLogRepository;
 import org.ezra.notificationservice.repository.NotificationTemplateRepository;
 import org.ezra.notificationservice.service.NotificationProcessingService;
+import org.ezra.notificationservice.service.NotificationSender;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.regex.Matcher;
@@ -25,6 +27,7 @@ import java.util.regex.Pattern;
 public class NotificationProcessingServiceImpl implements NotificationProcessingService {
     private final NotificationTemplateRepository templateRepository;
     private final NotificationLogRepository logRepository;
+    private final List<NotificationSender> notificationSenders;
 
     private static final Pattern PLACEHOLDER_PATTERN = Pattern.compile("\\{(.+?)\\}");
 
@@ -33,7 +36,6 @@ public class NotificationProcessingServiceImpl implements NotificationProcessing
     public void processNotificationEvent(NotificationEventDto eventDto) {
         log.info("Processing notification event: Type='{}', CustomerId='{}', EventId='{}'",
                 eventDto.getEventType(), eventDto.getCustomerId(), eventDto.getEventId());
-
         NotificationLog.NotificationLogBuilder logBuilder = NotificationLog.builder()
                 .customerId(eventDto.getCustomerId())
                 .eventType(eventDto.getEventType())
@@ -44,8 +46,9 @@ public class NotificationProcessingServiceImpl implements NotificationProcessing
         Optional<NotificationTemplate> templateOpt = templateRepository.findByTemplateCode(eventDto.getEventType());
 
         if (templateOpt.isEmpty()) {
-            log.warn("No template found for templateCode/eventType: {}. Logging raw event.", eventDto.getEventType());
-            logBuilder.body("No template found. Raw payload: " + eventDto.getPayload().toString())
+            log.warn("No template found for templateCode/eventType: '{}'. Logging raw event. EventId: {}",
+                    eventDto.getEventType(), eventDto.getEventId());
+            logBuilder.body("No template found. Raw payload: " + (eventDto.getPayload() != null ? eventDto.getPayload().toString() : "null"))
                     .channel(NotificationChannel.CONSOLE)
                     .status(NotificationStatus.FAILED)
                     .failureReason("Template not found: " + eventDto.getEventType());
@@ -55,40 +58,65 @@ public class NotificationProcessingServiceImpl implements NotificationProcessing
 
         NotificationTemplate template = templateOpt.get();
         logBuilder.templateUsed(template);
-        logBuilder.channel(template.getDefaultChannel());
-        String recipientAddress = eventDto.getPayload().getOrDefault("customerEmail",
-                eventDto.getPayload().getOrDefault("customerPhoneNumber",
-                        "customer_" + eventDto.getCustomerId() + "@simulated.com"));
+        NotificationChannel targetChannel = template.getDefaultChannel();
+        logBuilder.channel(targetChannel);
+
+        String recipientAddress = determineRecipientAddress(targetChannel, eventDto.getCustomerId(), eventDto.getPayload());
+        if (recipientAddress == null || recipientAddress.isBlank()) {
+            log.warn("Could not determine recipient address for customerId: {}, channel: {}. EventId: {}",
+                    eventDto.getCustomerId(), targetChannel, eventDto.getEventId());
+            logBuilder.status(NotificationStatus.FAILED)
+                    .failureReason("Recipient address not found or not provided for channel " + targetChannel);
+            logRepository.save(logBuilder.build());
+            return;
+        }
         logBuilder.recipientAddress(recipientAddress);
-
-
         String renderedSubject = renderTemplate(template.getSubjectTemplate(), eventDto.getPayload());
         String renderedBody = renderTemplate(template.getBodyTemplate(), eventDto.getPayload());
 
         logBuilder.subject(renderedSubject);
         logBuilder.body(renderedBody);
+        boolean sentSuccessfully = false;
+        String sendFailureReason = "No suitable sender found for channel: " + targetChannel;
 
-        boolean sentSuccessfully = simulateSend(template.getDefaultChannel(), recipientAddress, renderedSubject, renderedBody);
-
+        for (NotificationSender sender : notificationSenders) {
+            if (sender.supports(targetChannel)) {
+                try {
+                    sender.send(recipientAddress, renderedSubject, renderedBody, eventDto.getPayload());
+                    sentSuccessfully = true;
+                    log.info("SIMULATED SEND via {}: Channel='{}', To='{}', Subject='{}', EventId='{}'",
+                            sender.getClass().getSimpleName(), targetChannel, recipientAddress, renderedSubject, eventDto.getEventId());
+                    break; // Sent successfully by one sender
+                } catch (Exception e) {
+                    log.error("Error sending notification via {}: Channel='{}', To='{}', EventId='{}': {}",
+                            sender.getClass().getSimpleName(), targetChannel, recipientAddress, eventDto.getEventId(), e.getMessage(), e);
+                    sendFailureReason = "Failed to send via " + sender.getClass().getSimpleName() + ": " + e.getMessage();
+                }
+            }
+        }
         if (sentSuccessfully) {
             logBuilder.status(NotificationStatus.SIMULATED);
             logBuilder.sentAt(LocalDateTime.now());
-            log.info("SIMULATED SEND: Channel='{}', To='{}', Subject='{}'",
-                    template.getDefaultChannel(), recipientAddress, renderedSubject);
         } else {
             logBuilder.status(NotificationStatus.FAILED);
-            logBuilder.failureReason("Simulated send failure or channel not supported for simulation.");
-            log.error("SIMULATED SEND FAILED: Channel='{}', To='{}'", template.getDefaultChannel(), recipientAddress);
+            logBuilder.failureReason(sendFailureReason);
         }
-
         logRepository.save(logBuilder.build());
-        log.info("Notification log saved for EventId: {}", eventDto.getEventId());
+        log.info("Notification log with status {} saved for EventId: {}", logBuilder.build().getStatus(), eventDto.getEventId());
     }
 
     private String renderTemplate(String templateString, Map<String, String> parameters) {
-        if (templateString == null || parameters == null) {
-            return templateString;
+        if (templateString == null || templateString.isEmpty()) {
+            return "";
         }
+        if (parameters == null || parameters.isEmpty()) {
+            Matcher earlyMatcher = PLACEHOLDER_PATTERN.matcher(templateString);
+            if (!earlyMatcher.find()) {
+                return templateString;
+            }
+        }
+
+
         StringBuilder sb = new StringBuilder();
         Matcher matcher = PLACEHOLDER_PATTERN.matcher(templateString);
         while (matcher.find()) {
@@ -100,38 +128,13 @@ public class NotificationProcessingServiceImpl implements NotificationProcessing
         return sb.toString();
     }
 
-    private boolean simulateSend(NotificationChannel channel, String recipient, String subject, String body) {
-        switch (channel) {
-            case EMAIL:
-                log.info("--- SIMULATING EMAIL ---");
-                log.info("To: {}", recipient);
-                log.info("Subject: {}", subject);
-                log.info("Body: \n{}", body);
-                log.info("--- END SIMULATING EMAIL ---");
-                return true;
-            case SMS:
-                log.info("--- SIMULATING SMS ---");
-                log.info("To: {}", recipient);
-                log.info("Message: {}", body);
-                log.info("--- END SIMULATING SMS ---");
-                return true;
-            case CONSOLE:
-                log.info("--- CONSOLE NOTIFICATION ---");
-                log.info("Recipient Context: {}", recipient);
-                log.info("Subject: {}", subject);
-                log.info("Body: \n{}", body);
-                log.info("--- END CONSOLE NOTIFICATION ---");
-                return true;
-            case PUSH:
-                log.info("--- SIMULATING PUSH NOTIFICATION ---");
-                log.info("To Device Token (context): {}", recipient);
-                log.info("Title: {}", subject);
-                log.info("Body: {}", body);
-                log.info("--- END SIMULATING PUSH NOTIFICATION ---");
-                return true;
-            default:
-                log.warn("Simulation for channel {} not implemented.", channel);
-                return false;
-        }
+    private String determineRecipientAddress(NotificationChannel channel, Long customerId, Map<String, String> payload) {
+        return switch (channel) {
+            case EMAIL -> payload.getOrDefault("customerEmail", "customer_" + customerId + "@simulated-email.com");
+            case SMS -> payload.getOrDefault("customerPhoneNumber", "+10000000000");
+            case PUSH -> payload.getOrDefault("customerPushToken", "simulated-push-token-" + customerId);
+            case CONSOLE -> "ConsoleLogForCustomer_" + customerId;
+            default -> null;
+        };
     }
 }
