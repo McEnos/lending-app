@@ -1,0 +1,108 @@
+version: "3.9"
+services:
+  customer-service:
+    container_name: customer-service
+    hostname: customer-service
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        MODULE_NAME: customer-service
+    ports:
+      - "8001:8000"
+  lending-service:
+    container_name: lending-service
+    hostname: lending-service
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        MODULE_NAME: lending-service
+    ports:
+      - "8002:8000"
+  notification-service:
+    container_name: notification-service
+    hostname: lending-service
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        MODULE_NAME: notification-service
+    ports:
+      - "8003:8000"
+  service-discovery:
+    container_name: service-discovery
+    hostname: service-discovery
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        MODULE_NAME: service-discovery
+  broker1:
+    image: confluentinc/cp-kafka:7.8.0
+    hostname: broker1
+    container_name: broker1
+    ports:
+      - "9092:9092"
+      - "9093:9093"
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_BROKER_ID: 1
+      KAFKA_PROCESS_ROLES: 'broker,controller'
+      KAFKA_CONTROLLER_QUORUM_VOTERS: '1@broker1:9093,2@broker2:9093'
+      KAFKA_LISTENERS: 'PLAINTEXT://broker1:9092,CONTROLLER://broker1:9093'
+      KAFKA_ADVERTISED_LISTENERS: 'PLAINTEXT://broker1:9092'
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: 'CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT'
+      KAFKA_CONTROLLER_LISTENER_NAMES: 'CONTROLLER'
+      KAFKA_INTER_BROKER_LISTENER_NAME: 'PLAINTEXT'
+      CLUSTER_ID: 'EmptNWtoR4GGWx-BH6nGLQ'
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 3
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_DEFAULT_REPLICATION_FACTOR: 3
+      KAFKA_MIN_INSYNC_REPLICAS: 2
+    volumes:
+      - ./docker/broker1/data:/var/lib/kafka/data
+    networks:
+      - lending-app-network
+  broker2:
+    image: confluentinc/cp-kafka:7.8.0
+    hostname: broker2
+    container_name: broker2
+    ports:
+      - "9094:9092"
+      - "9095:9093"
+    environment:
+      KAFKA_NODE_ID: 2
+      KAFKA_BROKER_ID: 2
+      KAFKA_PROCESS_ROLES: 'broker,controller'
+      KAFKA_CONTROLLER_QUORUM_VOTERS: '1@broker1:9093,2@broker2:9093'
+      KAFKA_LISTENERS: 'PLAINTEXT://broker2:9092,CONTROLLER://broker2:9093'
+      KAFKA_ADVERTISED_LISTENERS: 'PLAINTEXT://broker2:9092'
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: 'CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT'
+      KAFKA_CONTROLLER_LISTENER_NAMES: 'CONTROLLER'
+      KAFKA_INTER_BROKER_LISTENER_NAME: 'PLAINTEXT'
+      CLUSTER_ID: 'EmptNWtoR4GGWx-BH6nGLQ'
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 3
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_DEFAULT_REPLICATION_FACTOR: 3
+      KAFKA_MIN_INSYNC_REPLICAS: 2
+    volumes:
+      - ./docker/broker2/data:/var/lib/kafka/data
+    networks:
+      - lending-app-network
+  kafka-ui:
+    image: provectuslabs/kafka-ui:latest
+    container_name: kafka-cluster-ui
+    ports:
+      - "8050:8080"
+    environment:
+      KAFKA_CLUSTERS_0_NAME: local
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: broker1:9092,broker2:9092
+    depends_on:
+      - broker1
+      - broker2
+    networks:
+      - lending-app-network
+
+networks:
+  lending-app-network:

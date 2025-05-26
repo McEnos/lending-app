@@ -1,0 +1,23 @@
+# Ignore build output
+target/
+*/target/
+
+# Maven
+.mvn/
+.settings/
+.idea/
+*.iml
+*.log
+
+# Git
+.git
+.gitignore
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Docker
+Dockerfile
+docker-compose.yml
+
