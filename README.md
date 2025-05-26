@@ -42,6 +42,7 @@ The project is organized into a  Maven multi-module project, with each module re
 *   `customer-service/`: Manages customer profiles and loan limits.
 *   `lending-service/`: Manages loan products and loan lifecycle.
 *   `notification-service/`: Manages notifications.
+*    `docker compose file` used to start kafka cluster containers and also run the services as containers.
 
 ## Setup and Running the Application
 
