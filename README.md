@@ -71,6 +71,9 @@ Follow these steps to set up and run the entire lending application:
                      Swagger documentation at http://localhost:8002/swagger-ui/index.html
 
 6. For docker deployment for the service: `docker-compose up -d`
+7. **Running Unit Tests**
+   To run the unit tests for all modules, navigate to the project root directory and execute:
+   `mvn test`
 
 
    **Architectural Overview**
