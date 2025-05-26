@@ -59,3 +59,8 @@ Follow these steps to set up and run the entire lending application:
    lending service: `./mvnw spring-boot:run -pl lending-service`
    customer service: `./mvnw spring-boot:run -pl customer-service`
 5. For docker deployment: `docker compose up`
+6. Swagger documentation: 
+    customer service: [http://localhost:8002/swagger-ui/index.html]
+    customer service: [http://localhost:8001/swagger-ui/index.html]
+7. Eureka url: [http://localhost:8761/]
+  
