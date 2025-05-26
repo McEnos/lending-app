@@ -106,7 +106,7 @@ public class LoanServiceImpl implements LoanService {
             loan.setNextBillingDate(loan.getFinalDueDate());
         }
         Loan savedLoan = loanRepository.save(loan);
-        sendLoanCreationNotification(savedLoan, customer.getEmail());
+        sendLoanCreationNotification(savedLoan);
         return loanMapper.toDto(savedLoan);
     }
 
@@ -128,7 +128,7 @@ public class LoanServiceImpl implements LoanService {
                 .map(AppliedFee::getAmount)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
         BigDecimal perInstallmentFee = totalOriginationFees.divide(BigDecimal.valueOf(numberOfInstallments), 2, RoundingMode.HALF_UP);
-        LocalDate installmentDueDate = loan.getOriginationDate();
+        LocalDate installmentDueDate;
         List<Installment> installments = new ArrayList<>();
         for (int i = 1; i <= numberOfInstallments; i++) {
             if (loan.getTenureUnit() == TenureType.MONTHS) {
@@ -161,7 +161,7 @@ public class LoanServiceImpl implements LoanService {
         loan.setNextBillingDate(installments.getFirst().getDueDate());
     }
 
-    private void sendLoanCreationNotification(Loan loan, String customerEmail) {
+    private void sendLoanCreationNotification(Loan loan) {
         NotificationEventDto event = NotificationEventDto.builder()
                 .eventType("LOAN_APPLICATION_SUBMITTED")
                 .customerId(loan.getCustomerId())
