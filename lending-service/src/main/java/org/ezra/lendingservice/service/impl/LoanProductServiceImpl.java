@@ -37,6 +37,8 @@ public class LoanProductServiceImpl implements LoanProductService {
             throw new ValidationException("Min tenure cannot be greater than max tenure.");
         }
         LoanProduct loanProduct = loanProductMapper.toEntity(productDto);
+        Long currentId = loanProductRepository.findMaxId();
+        loanProduct.setId(currentId + 1);
         LoanProduct savedProduct = loanProductRepository.save(loanProduct);
         return loanProductMapper.toDto(savedProduct);
     }

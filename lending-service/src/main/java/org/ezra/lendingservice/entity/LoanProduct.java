@@ -18,7 +18,7 @@ import java.util.List;
 @Builder
 public class LoanProduct {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    //@GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @Column(nullable = false, unique = true)
