@@ -70,5 +70,5 @@ Follow these steps to set up and run the entire lending application:
                      Access h2 console at http://localhost:8002/h2-console
                      Swagger documentation at http://localhost:8002/swagger-ui/index.html
 
-6. For docker deployment: `docker compose up`
+6. For docker deployment for the service: `docker-compose up -d`
   
