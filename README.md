@@ -54,7 +54,7 @@ Follow these steps to set up and run the entire lending application:
 2. cd to the project folder `lending-app`
 3. Start kafka cluster:
     using docker compose file, start a simple kafka cluster by running `docker-compose up kafka-ui -d` this will start a 2 node kafka cluster
-    running in Kraft mode i.e. without Zookeeper dependency
+    running in Kraft mode i.e. without Zookeeper dependency which can be accessed at http://localhost:8050
 4. Run: `./mvnw clean install` to install the project dependencies
 5. Start individual services:
    discovery service: `./mvnw spring-boot:run -pl service-discovery` once started, you can access the Eureka dashboard at: http://localhost:8761
