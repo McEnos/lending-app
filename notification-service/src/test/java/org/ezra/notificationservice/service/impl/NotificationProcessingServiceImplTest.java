@@ -112,7 +112,7 @@ class NotificationProcessingServiceImplTest {
         assertEquals(unknownEventDto.getCustomerId(), savedLog.getCustomerId());
         assertEquals(unknownEventDto.getEventType(), savedLog.getEventType());
         assertNull(savedLog.getTemplateUsed());
-        assertEquals(NotificationChannel.CONSOLE, savedLog.getChannel());
+        assertEquals(NotificationChannel.PUSH, savedLog.getChannel());
         assertTrue(savedLog.getBody().contains("No template found. Raw payload:"));
         assertEquals(NotificationStatus.FAILED, savedLog.getStatus());
         assertEquals("Template not found: UNKNOWN_EVENT", savedLog.getFailureReason());
@@ -126,7 +126,7 @@ class NotificationProcessingServiceImplTest {
                 .templateCode("EVENT_MISSING_PLACEHOLDER")
                 .subjectTemplate("Info: {info}")
                 .bodyTemplate("Detail: {detail}, Extra: {extraInfo}")
-                .defaultChannel(NotificationChannel.CONSOLE)
+                .defaultChannel(NotificationChannel.PUSH)
                 .build();
         when(templateRepository.findByTemplateCode("EVENT_MISSING_PLACEHOLDER")).thenReturn(Optional.of(templateWithMissingPlaceholder));
         when(logRepository.save(any(NotificationLog.class))).thenAnswer(inv -> inv.getArgument(0));
