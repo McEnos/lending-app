@@ -52,15 +52,23 @@ Follow these steps to set up and run the entire lending application:
 
 1. Clone the repo
 2. cd to the project folder
-3. Run: `./mvnw clean install`
-4. Start individual services:
-   discovery service: `./mvnw spring-boot:run -pl discovery-service`
-   notification service: `./mvnw spring-boot:run -pl notification-service`
+3. Start kafka cluster:
+    using docker compose file, start a simple kafka cluster by running `docker-compose up kafka-ui -d` this will start a 2 node kafka cluster
+    running in Kraft mode i.e. without Zookeeper dependency
+4. Run: `./mvnw clean install` to install the project dependencies
+5. Start individual services:
+   discovery service: `./mvnw spring-boot:run -pl discovery-service` once started, you can access the Eureka dashboard at: http://localhost:8761
+   notification service: `./mvnw spring-boot:run -pl notification-service` 
+                       once started, Check the Eureka dashboard; notification-service should appear as registered.
+                       Access h2 console at http://localhost:8003/h2-console
    lending service: `./mvnw spring-boot:run -pl lending-service`
+                       once started, Check the Eureka dashboard; LENDING-SERVICE should appear.
+                       Access h2 console at http://localhost:8001/h2-console
+                       Swagger documentation at http://localhost:8001/swagger-ui/index.html
    customer service: `./mvnw spring-boot:run -pl customer-service`
-5. For docker deployment: `docker compose up`
-6. Swagger documentation: 
-    customer service: [http://localhost:8002/swagger-ui/index.html]
-    customer service: [http://localhost:8001/swagger-ui/index.html]
-7. Eureka url: [http://localhost:8761/]
+                     Once started, Check the Eureka dashboard; CUSTOMER-SERVICE should appear.
+                     Access h2 console at http://localhost:8002/h2-console
+                     Swagger documentation at http://localhost:8002/swagger-ui/index.html
+
+6. For docker deployment: `docker compose up`
   
